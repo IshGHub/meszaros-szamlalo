@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Meddig elég a pénz?</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html, body {
+    min-height: 100%;
+    background: #ffffff;
+    color: #1a1a1a;
+    font-family: 'Montserrat', sans-serif;
+  }
+
+  body {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    padding: 3rem 1.5rem;
+  }
+
+  .wrapper {
+    width: 100%;
+    max-width: 720px;
+  }
+
+  .header-title {
+    font-size: 15px;
+    font-weight: 400;
+    line-height: 1.75;
+    color: #1a1a1a;
+    margin-bottom: 2rem;
+  }
+
+  .header-title .strike {
+    text-decoration: line-through;
+    color: #999;
+  }
+
+  /* Év kártya – minden középre */
+  .card-year {
+    background: #f5f5f0;
+    border-radius: 8px;
+    padding: 2rem 2rem 1.75rem;
+    margin-bottom: 10px;
+    text-align: center;
+  }
+
+  .card-year .lbl {
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.18em;
+    color: #999;
+    text-transform: uppercase;
+    margin-bottom: 0.5rem;
+  }
+
+  .card-year .num {
+    font-size: clamp(36px, 8vw, 56px);
+    font-weight: 700;
+    color: #1a1a1a;
+    letter-spacing: 0.02em;
+    line-height: 1.1;
+  }
+
+  .card-year .words {
+    font-size: 13px;
+    font-weight: 400;
+    color: #888;
+    margin-top: 0.5rem;
+  }
+
+  /* Kisebb kártyák */
+  .cards-row {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 10px;
+    margin-bottom: 2rem;
+  }
+
+  .card-small {
+    background: #f5f5f0;
+    border-radius: 8px;
+    padding: 1.25rem 0.75rem;
+    text-align: center;
+  }
+
+  .card-small .lbl {
+    font-size: 9px;
+    font-weight: 600;
+    letter-spacing: 0.18em;
+    color: #999;
+    text-transform: uppercase;
+    margin-bottom: 0.5rem;
+  }
+
+  .card-small .num {
+    font-size: clamp(24px, 4.5vw, 36px);
+    font-weight: 700;
+    color: #1a1a1a;
+    line-height: 1;
+  }
+
+  .footer {
+    font-size: 12px;
+    font-weight: 400;
+    color: #aaa;
+    border-top: 1px solid #e8e8e4;
+    padding-top: 1rem;
+  }
+
+  @media (max-width: 480px) {
+    .cards-row { grid-template-columns: repeat(3, 1fr); }
+  }
+</style>
+</head>
+<body>
+
+<div class="wrapper">
+
+  <p class="header-title">
+    Ennyi ideig elég <span class="strike">Mészáros Lőrinc</span> Orbán Viktor pénze,
+    havi 1&nbsp;000&nbsp;000 (egy millió) forint költőpénzzel,
+    ha 2026. április 13-a óta egy forintot se növekedne a vagyona.
+  </p>
+
+  <div class="card-year">
+    <p class="lbl">Év</p>
+    <p class="num" id="v-ev">0</p>
+    <p class="words" id="v-ev-szo">—</p>
+  </div>
+
+  <div class="cards-row">
+    <div class="card-small">
+      <p class="lbl">Hónap</p>
+      <p class="num" id="v-ho">0</p>
+    </div>
+    <div class="card-small">
+      <p class="lbl">Nap</p>
+      <p class="num" id="v-nap">0</p>
+    </div>
+    <div class="card-small">
+      <p class="lbl">Óra</p>
+      <p class="num" id="v-ora">0</p>
+    </div>
+    <div class="card-small">
+      <p class="lbl">Perc</p>
+      <p class="num" id="v-perc">0</p>
+    </div>
+    <div class="card-small">
+      <p class="lbl">Másodperc</p>
+      <p class="num" id="v-mp">0</p>
+    </div>
+  </div>
+
+  <p class="footer">Ha 2026. április 13. (00:00) óta nem keresett volna egy fillért se többet.</p>
+
+</div>
+
+<script>
+(function () {
+  const startDate = new Date('2026-04-13T00:00:00');
+  const startSec  = 148916 * 365.2425 * 24 * 3600 + 8 * 30.436875 * 24 * 3600;
+
+  const egy = ['','egy','kettő','három','négy','öt','hat','hét','nyolc','kilenc',
+    'tíz','tizenegy','tizenkettő','tizenhárom','tizennégy','tizenöt','tizenhat',
+    'tizenhét','tizennyolc','tizenkilenc'];
+  const tiz = ['','','húsz','harminc','negyven','ötven','hatvan','hetven','nyolcvan','kilencven'];
+
+  function szaz(n) {
+    if (!n) return '';
+    if (n < 20) return egy[n];
+    const t = Math.floor(n / 10), e = n % 10;
+    let r = tiz[t];
+    if (t === 2 && e) r = 'huszon';
+    return r + (e ? egy[e] : '');
+  }
+  function haromjegy(n) {
+    if (!n) return '';
+    const s = Math.floor(n / 100), m = n % 100;
+    return (s ? (s === 1 ? 'száz' : egy[s] + 'száz') : '') + szaz(m);
+  }
+  function evBetukkel(n) {
+    if (!n) return 'nulla';
+    const mrd  = Math.floor(n / 1e9); n %= 1e9;
+    const mill = Math.floor(n / 1e6); n %= 1e6;
+    const ez   = Math.floor(n / 1e3); n %= 1e3;
+    let r = '';
+    if (mrd)  r += haromjegy(mrd)  + 'milliárd';
+    if (mill) r += (r ? '-' : '') + haromjegy(mill) + 'millió';
+    if (ez)   r += (r ? '-' : '') + (ez === 1 ? 'ezer' : haromjegy(ez) + 'ezer');
+    if (n)    r += (r ? '-' : '') + haromjegy(n);
+    return r;
+  }
+
+  function decompose(total) {
+    let r = Math.floor(total);
+    const mp   = r % 60; r = Math.floor(r / 60);
+    const perc = r % 60; r = Math.floor(r / 60);
+    const ora  = r % 24; r = Math.floor(r / 24);
+    const ev   = Math.floor(r / 365.2425);
+    const napM = r - Math.floor(ev * 365.2425);
+    const ho   = Math.floor(napM / 30.436875);
+    const nap  = Math.floor(napM - Math.floor(ho * 30.436875));
+    return { ev, ho, nap, ora, perc, mp };
+  }
+
+  function update() {
+    const rem = Math.max(0, startSec - (Date.now() - startDate) / 1000);
+    const c = decompose(rem);
+    document.getElementById('v-ev').textContent   = c.ev.toLocaleString('hu-HU');
+    document.getElementById('v-ev-szo').textContent = evBetukkel(c.ev);
+    document.getElementById('v-ho').textContent   = c.ho;
+    document.getElementById('v-nap').textContent  = c.nap;
+    document.getElementById('v-ora').textContent  = c.ora;
+    document.getElementById('v-perc').textContent = c.perc;
+    document.getElementById('v-mp').textContent   = c.mp;
+  }
+
+  update();
+  setInterval(update, 1000);
+})();
+</script>
+</body>
+</html>
