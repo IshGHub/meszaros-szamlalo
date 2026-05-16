@@ -58,8 +58,8 @@
   }
 
   .selector-buttons {
-    display: flex;
-    flex-wrap: wrap;
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
     gap: 8px;
   }
 
@@ -67,13 +67,15 @@
     font-family: 'Montserrat', sans-serif;
     font-size: 13px;
     font-weight: 500;
-    padding: 0.55rem 1rem;
+    padding: 0.65rem 0.75rem;
     border-radius: 6px;
     border: 1.5px solid #e0e0d8;
     background: #f5f5f0;
     color: #555;
     cursor: pointer;
     transition: all 0.15s ease;
+    text-align: center;
+    line-height: 1.4;
   }
 
   .sel-btn:hover {
@@ -87,29 +89,49 @@
     color: #fff;
   }
 
-  .custom-row {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    margin-top: 8px;
+  .sel-btn .sub {
+    display: block;
+    font-weight: 300;
+    font-size: 10px;
+    opacity: 0.65;
+    margin-top: 2px;
+  }
+
+  .sel-btn.active .sub {
+    opacity: 0.7;
+  }
+
+  /* Custom input — same visual as btn */
+  .custom-wrap {
+    position: relative;
   }
 
   .custom-input {
     font-family: 'Montserrat', sans-serif;
     font-size: 13px;
     font-weight: 500;
-    padding: 0.55rem 1rem;
+    padding: 0.65rem 2.2rem 0.65rem 0.75rem;
     border-radius: 6px;
     border: 1.5px solid #e0e0d8;
     background: #f5f5f0;
     color: #1a1a1a;
-    width: 180px;
+    width: 100%;
     outline: none;
-    transition: border-color 0.15s;
+    transition: border-color 0.15s, background 0.15s;
+    -moz-appearance: textfield;
+  }
+
+  .custom-input::-webkit-outer-spin-button,
+  .custom-input::-webkit-inner-spin-button { -webkit-appearance: none; }
+
+  .custom-input::placeholder {
+    color: #aaa;
+    font-weight: 400;
   }
 
   .custom-input:focus {
-    border-color: #1a1a1a;
+    border-color: #aaa;
+    background: #fff;
   }
 
   .custom-input.active {
@@ -118,9 +140,14 @@
   }
 
   .custom-unit {
-    font-size: 12px;
-    color: #999;
+    position: absolute;
+    right: 8px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 10px;
+    color: #aaa;
     font-weight: 500;
+    pointer-events: none;
   }
 
   /* Év kártya */
@@ -200,9 +227,9 @@
     font-weight: 500;
   }
 
-  @media (max-width: 480px) {
+  @media (max-width: 560px) {
+    .selector-buttons { grid-template-columns: repeat(2, 1fr); }
     .cards-row { grid-template-columns: repeat(3, 1fr); }
-    .sel-btn { font-size: 12px; padding: 0.5rem 0.75rem; }
   }
 </style>
 </head>
@@ -215,17 +242,24 @@
     ha 2026. április 13-a óta egy forintot se növekedne a vagyona.
   </p>
 
-  <!-- Selector -->
   <div class="selector">
     <p class="selector-label">Havi költőpénz</p>
     <div class="selector-buttons">
-      <button class="sel-btn active" data-amount="1000000">1 000 000 Ft</button>
-      <button class="sel-btn" data-amount="548900">548 900 Ft <span style="font-weight:300;font-size:11px;opacity:0.7">— nettó átlagbér</span></button>
-      <button class="sel-btn" data-amount="230000">230 000 Ft <span style="font-weight:300;font-size:11px;opacity:0.7">— átlag nyugdíj</span></button>
-    </div>
-    <div class="custom-row">
-      <input class="custom-input" type="number" id="custom-input" placeholder="Egyéni összeg..." min="1">
-      <span class="custom-unit">Ft / hónap</span>
+      <button class="sel-btn active" data-amount="1000000">
+        1 000 000 Ft
+      </button>
+      <button class="sel-btn" data-amount="548900">
+        548 900 Ft
+        <span class="sub">nettó átlagbér</span>
+      </button>
+      <button class="sel-btn" data-amount="230000">
+        230 000 Ft
+        <span class="sub">átlag nyugdíj</span>
+      </button>
+      <div class="custom-wrap">
+        <input class="custom-input" type="number" id="custom-input" placeholder="Egyéni összeg" min="1">
+        <span class="custom-unit">Ft</span>
+      </div>
     </div>
   </div>
 
@@ -268,16 +302,12 @@
 <script>
 (function () {
   const startDate  = new Date('2026-04-13T00:00:00');
-  const VAGYON_FT  = 148916 * 365.2425 * 24 * 3600 * (1000000 / (30.436875 * 24 * 3600));
-  // VAGYON_FT = a vagyon forintban (1M Ft/hó alapján számított ekvivalens)
-  // Pontosabban: 148916 év 8 hónap = startSec másodperc, és forintPS = 1M/hó
   const BASE_SEC   = 148916 * 365.2425 * 24 * 3600 + 8 * 30.436875 * 24 * 3600;
-  const BASE_FORINT_PS = 1000000 / (30.436875 * 24 * 3600);
-  const VAGYON     = BASE_SEC * BASE_FORINT_PS; // forint
+  const BASE_FPS   = 1000000 / (30.436875 * 24 * 3600);
+  const VAGYON     = BASE_SEC * BASE_FPS;
 
   let havi = 1000000;
 
-  /* --- Magyar számnevek --- */
   const egy = ['','egy','kettő','három','négy','öt','hat','hét','nyolc','kilenc',
     'tíz','tizenegy','tizenkettő','tizenhárom','tizennégy','tizenöt','tizenhat',
     'tizenhét','tizennyolc','tizenkilenc'];
@@ -323,29 +353,28 @@
   }
 
   function update() {
-    const forintPS = havi / (30.436875 * 24 * 3600);
-    const totalSec = VAGYON / forintPS;
-    const elapsedSec = Math.max(0, (Date.now() - startDate) / 1000);
-    const remSec = Math.max(0, totalSec - elapsedSec);
-    const c = decompose(remSec);
+    const fps    = havi / (30.436875 * 24 * 3600);
+    const totSec = VAGYON / fps;
+    const elapsed = Math.max(0, (Date.now() - startDate) / 1000);
+    const rem    = Math.max(0, totSec - elapsed);
+    const c      = decompose(rem);
 
-    document.getElementById('v-ev').textContent    = c.ev.toLocaleString('hu-HU');
+    document.getElementById('v-ev').textContent     = c.ev.toLocaleString('hu-HU');
     document.getElementById('v-ev-szo').textContent = evBetukkel(c.ev);
-    document.getElementById('v-ho').textContent    = c.ho;
-    document.getElementById('v-nap').textContent   = c.nap;
-    document.getElementById('v-ora').textContent   = c.ora;
-    document.getElementById('v-perc').textContent  = c.perc;
-    document.getElementById('v-mp').textContent    = c.mp;
+    document.getElementById('v-ho').textContent     = c.ho;
+    document.getElementById('v-nap').textContent    = c.nap;
+    document.getElementById('v-ora').textContent    = c.ora;
+    document.getElementById('v-perc').textContent   = c.perc;
+    document.getElementById('v-mp').textContent     = c.mp;
   }
 
-  /* --- UI --- */
-  const buttons = document.querySelectorAll('.sel-btn');
+  const buttons     = document.querySelectorAll('.sel-btn');
   const customInput = document.getElementById('custom-input');
-  const footerAmount = document.getElementById('footer-amount');
+  const footerAmt   = document.getElementById('footer-amount');
 
   function setAmount(val, clearCustom) {
     havi = val;
-    footerAmount.textContent = Math.round(val).toLocaleString('hu-HU') + ' Ft';
+    footerAmt.textContent = Math.round(val).toLocaleString('hu-HU') + ' Ft';
     if (clearCustom) {
       customInput.value = '';
       customInput.classList.remove('active');
@@ -367,13 +396,6 @@
       buttons.forEach(b => b.classList.remove('active'));
       customInput.classList.add('active');
       setAmount(val, false);
-    }
-  });
-
-  customInput.addEventListener('focus', () => {
-    if (customInput.value) {
-      buttons.forEach(b => b.classList.remove('active'));
-      customInput.classList.add('active');
     }
   });
 
